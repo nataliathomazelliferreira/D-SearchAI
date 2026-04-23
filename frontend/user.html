@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca RAG - D-SearchAi</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            text-align: center;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 8px 24px;
+            margin-top: 24px;
+            transition: all var(--transition-fast);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            padding: 12px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-btn {
+            background: var(--accent-primary);
+            color: #000;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* Results Area */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            display: none;
+        }
+
+        /* AI Assistant Answer */
+        .ai-answer-card {
+            padding: 30px;
+            border-top: 4px solid var(--accent-primary);
+        }
+        
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+        
+        .ai-text {
+            line-height: 1.7;
+            color: #E2E8F0;
+            font-size: 1.05rem;
+        }
+        
+        /* Sources / References */
+        .source-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .source-card:hover {
+            border-color: var(--accent-secondary);
+            background: rgba(0, 123, 255, 0.05);
+        }
+        
+        .source-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .source-excerpt {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-style: italic;
+            border-left: 2px solid var(--accent-secondary);
+            padding-left: 12px;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 20px 0;
+            display: none;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container animate-fade-in">
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+            <h1 style="font-size: 2.5rem; margin-bottom: 16px;">Como posso ajudar?</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Consulte procedimentos, normas ou atividades industriais via linguagem natural.</p>
+            
+            <form id="searchForm" class="search-bar">
+                <input type="text" id="searchInput" class="search-input" placeholder="Ex: Qual o procedimento para auditoria da RDC 665?" autocomplete="off" required>
+                <button type="submit" class="search-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </form>
+            
+            <div class="typing-indicator" id="typingIndicator" style="justify-content: center; margin-top: 20px;">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+
+        <!-- RAG Results Area -->
+        <div class="results-grid" id="resultsArea">
+            
+            <!-- AI Answer -->
+            <div class="glass-panel ai-answer-card animate-fade-in">
+                <div class="ai-header">
+                    <div style="width: 24px; height: 24px; background: var(--accent-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-size: 14px;">✨</div>
+                    Resposta Sintetizada (D-SearchAi)
+                </div>
+                <div class="ai-text" id="aiResponseText">
+                    <!-- Text will be typed here -->
+                </div>
+            </div>
+
+            <!-- Context Sources -->
+            <div class="glass-panel animate-fade-in" style="padding: 24px; background: rgba(11, 14, 20, 0.4);">
+                <h3 style="font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    Fontes Consultadas
+                    <span class="badge badge-ai" style="font-size: 0.7rem;">Vector Match</span>
+                </h3>
+                
+                <div id="sourcesList">
+                    <!-- Sources will be injected here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/user.js"></script>
+    <script>
+        app.checkAuth('user');
+        injectNavbar();
+    </script>
+</body>
+</html>
