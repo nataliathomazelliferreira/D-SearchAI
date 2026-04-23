@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - D-SearchAi</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at 50% 50%, #151A22 0%, #0B0E14 100%);
+        }
+        
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 2rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .login-title {
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .role-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .role-btn {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-align: left;
+        }
+
+        .role-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 229, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        .role-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .role-btn:hover .role-icon {
+            background: var(--accent-primary);
+            color: #000;
+        }
+
+        .role-info h3 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .role-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity var(--transition-fast, 0.2s);
+        }
+
+        .modal-backdrop.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 340px;
+            padding: 28px;
+            transform: scale(0.95);
+            transition: transform var(--transition-fast, 0.2s);
+        }
+
+        .modal-backdrop.show .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="glass-panel login-card animate-fade-in">
+            <div class="login-logo">Q</div>
+            <h1 class="login-title">D-SearchAi</h1>
+            <p class="login-subtitle">Inteligência Artificial Industrial para Governança Documental.<br/>Selecione seu perfil de acesso.</p>
+            
+            <div class="role-selector">
+                <div class="role-btn" onclick="app.showAdminLogin()">
+                    <div class="role-icon">⚙️</div>
+                    <div class="role-info">
+                        <h3>Administrador</h3>
+                        <p>Upload de manuais e gestão da base</p>
+                    </div>
+                </div>
+
+                <div class="role-btn" onclick="app.login('user')">
+                    <div class="role-icon">🔍</div>
+                    <div class="role-info">
+                        <h3>Usuário Técnico</h3>
+                        <p>Busca semântica via linguagem natural</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="modal-backdrop">
+        <div class="glass-panel modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 1.2rem;">Acesso Administrativo</h3>
+                <button onclick="app.closeAdminLogin()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</button>
+            </div>
+            
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px; text-align: left;">Senha de Acesso</label>
+                <input type="password" id="adminPassword" class="input-field" placeholder="Digite a senha..." style="width: 100%; box-sizing: border-box;" onkeypress="if(event.key === 'Enter') app.submitAdminLogin()">
+            </div>
+            
+            <p id="adminLoginError" style="color: var(--status-error); font-size: 0.85rem; margin-bottom: 16px; display: none; text-align: left;">Senha incorreta. Tente "admin123".</p>
+            
+            <button class="btn btn-primary" onclick="app.submitAdminLogin()" style="width: 100%;">Acessar Painel</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        app.checkAuth();
+    </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - D-SearchAi</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent-primary);
+            background: var(--accent-glow);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: var(--accent-primary);
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .data-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .upload-progress {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            background: var(--bg-surface-elevated);
+            border-radius: 8px;
+            border: 1px solid var(--accent-primary);
+        }
+        
+        .progress-bar-container {
+            height: 6px;
+            background: var(--bg-base);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-primary);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container animate-fade-in">
+        <h2 style="margin-bottom: 24px;">Painel de Gestão Documental</h2>
+        
+        <!-- Stats -->
+        <div class="dashboard-grid">
+            <div class="glass-panel stat-card">
+                <div class="stat-value" id="stat-docs">12</div>
+                <div class="stat-label">Documentos Indexados</div>
+            </div>
+            <div class="glass-panel stat-card">
+                <div class="stat-value" id="stat-norms">45</div>
+                <div class="stat-label">Normas Identificadas</div>
+            </div>
+            <div class="glass-panel stat-card">
+                <div class="stat-value" id="stat-vectors">1.2M</div>
+                <div class="stat-label">Vetores Semânticos</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Column -->
+            <div class="glass-panel" style="padding: 24px;">
+                <h3 style="margin-bottom: 20px; font-size: 1.2rem;">Novo Documento</h3>
+                
+                <form id="uploadForm">
+                    <div class="input-group">
+                        <label>Departamento</label>
+                        <select class="input-field" id="dept" required>
+                            <option value="">Selecione...</option>
+                            <option value="Qualidade">Qualidade</option>
+                            <option value="Engenharia">Engenharia</option>
+                            <option value="Operações">Operações</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Categoria Técnica</label>
+                        <select class="input-field" id="category" required>
+                            <option value="">Selecione...</option>
+                            <option value="POP">POP (Procedimento Padrão)</option>
+                            <option value="Manual">Manual de Qualidade</option>
+                            <option value="Instrucao">Instrução de Trabalho</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-area" id="dropZone">
+                        <div class="upload-icon">📄</div>
+                        <p style="font-weight: 500; margin-bottom: 8px;">Arraste e solte o PDF/DOCX aqui</p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">ou clique para procurar</p>
+                        <input type="file" id="fileInput" accept=".pdf,.docx" style="display: none;" required>
+                    </div>
+                    
+                    <div class="upload-progress" id="uploadProgress">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                            <span id="progressText">Extraindo vetores via IA...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
+                        Processar com IA
+                    </button>
+                </form>
+            </div>
+
+            <!-- Table Column -->
+            <div class="glass-panel" style="padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="font-size: 1.2rem;">Base de Conhecimento RAG</h3>
+                    <div class="input-group" style="margin: 0; width: 250px;">
+                        <input type="text" class="input-field" placeholder="Filtrar arquivos..." style="padding: 8px 12px;">
+                    </div>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Arquivo</th>
+                            <th>Departamento</th>
+                            <th>Tags Extraídas (IA)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsTable">
+                        <!-- Mock Data will be injected here by admin.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        app.checkAuth('admin');
+        injectNavbar();
+    </script>
+</body>
+</html>
